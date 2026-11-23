@@ -12,18 +12,17 @@ BASE_URL = os.environ.get("BASE_URL", "http://localhost:8091")
 @pytest.fixture
 def driver():
     options = Options()
-    # Support both linux container path and windows host path
-    if os.path.exists("/usr/bin/chromium"):
-        options.binary_location = "/usr/bin/chromium"
-        service = Service("/usr/bin/chromedriver")
-    else:
-        service = Service()
     options.add_argument("--headless=new")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--window-size=1280,800")
-    options.add_argument("--user-data-dir=/tmp/chrome-test-profile")
-    drv = webdriver.Chrome(service=service, options=options)
+    if os.name != "nt":
+        options.binary_location = "/usr/bin/chromium"
+        options.add_argument("--user-data-dir=/tmp/chrome-profile")
+        service = Service("/usr/bin/chromedriver")
+        drv = webdriver.Chrome(service=service, options=options)
+    else:
+        drv = webdriver.Chrome(options=options)
     yield drv
     drv.quit()
 
